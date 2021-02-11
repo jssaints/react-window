@@ -6,17 +6,27 @@ import type { Props, ScrollToAlign } from './createListComponent';
 
 const DEFAULT_ESTIMATED_ITEM_SIZE = 50;
 
+type ItemMetadata = {|
+  offset: number,
+  size: number,
+|};
+
+type Metadata = {|
+  itemMetadataMap: { [index: number]: ItemMetadata },
+  lastMeasuredIndex: number,
+|};
+
+type onUpdateMetadataCallback = (metadata: Metadata) => void;
+
 type VariableSizeProps = {|
   estimatedItemSize: number,
+  onUpdateMetadata: onUpdateMetadataCallback,
+  initialMetadata: Metadata,
   ...Props<any>,
 |};
 
 type itemSizeGetter = (index: number) => number;
 
-type ItemMetadata = {|
-  offset: number,
-  size: number,
-|};
 type InstanceProps = {|
   itemMetadataMap: { [index: number]: ItemMetadata },
   estimatedItemSize: number,
@@ -28,7 +38,7 @@ const getItemMetadata = (
   index: number,
   instanceProps: InstanceProps
 ): ItemMetadata => {
-  const { itemSize } = ((props: any): VariableSizeProps);
+  const { itemSize, onUpdateMetadata } = ((props: any): VariableSizeProps);
   const { itemMetadataMap, lastMeasuredIndex } = instanceProps;
 
   if (index > lastMeasuredIndex) {
@@ -50,6 +60,13 @@ const getItemMetadata = (
     }
 
     instanceProps.lastMeasuredIndex = index;
+
+    if (onUpdateMetadata) {
+      onUpdateMetadata({
+        itemMetadataMap,
+        lastMeasuredIndex
+      });
+    }
   }
 
   return itemMetadataMap[index];
@@ -246,12 +263,12 @@ const VariableSizeList = createListComponent({
   },
 
   initInstanceProps(props: Props<any>, instance: any): InstanceProps {
-    const { estimatedItemSize } = ((props: any): VariableSizeProps);
+    const { estimatedItemSize, initialMetadata = {} } = ((props: any): VariableSizeProps);
 
     const instanceProps = {
-      itemMetadataMap: {},
+      itemMetadataMap: initialMetadata.itemMetadataMap || {},
       estimatedItemSize: estimatedItemSize || DEFAULT_ESTIMATED_ITEM_SIZE,
-      lastMeasuredIndex: -1,
+      lastMeasuredIndex: initialMetadata.lastMeasuredIndex || -1,
     };
 
     instance.resetAfterIndex = (
