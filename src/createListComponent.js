@@ -365,6 +365,7 @@ export default function createListComponent({
           children: items,
           ref: innerRef,
           style: {
+            overflow: "auto",
             height: direction === 'horizontal' ? '100%' : estimatedTotalSize,
             pointerEvents: isScrolling ? 'none' : '',
             width: direction === 'horizontal' ? estimatedTotalSize : '100%',
